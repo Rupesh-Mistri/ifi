@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.InputFilter;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
@@ -150,8 +151,10 @@ public class MainActivity extends AppCompatActivity {
                             JSONObject fieldObj = fieldsArray.getJSONObject(i);
                             String fieldName = fieldObj.getString("field");
                             String fieldType = fieldObj.getString("type");
+                            int max_length = fieldObj.getInt("max_length");
+                            boolean required = fieldObj.getBoolean("required");
 
-                            addFieldToForm(fieldName, fieldType); // your method for dynamically building the UI
+                            addFieldToForm(fieldName, fieldType, max_length, required); // your method for dynamically building the UI
                         }
                         linearLayout.addView(space);
                         linearLayout.addView(submitButton);
@@ -169,9 +172,9 @@ public class MainActivity extends AppCompatActivity {
         Volley.newRequestQueue(this).add(request);
     }
 
-    private void addFieldToForm(String fieldName, String fieldType) {
+    private void addFieldToForm(String fieldName, String fieldType, int max_length, boolean required) {
         TextView label = new TextView(this);
-        label.setText(capitalize(fieldName.replace("_", " ")));
+        label.setText(capitalize(fieldName.replace("_", " ")) + (required ? " *" : ""));
         label.setTextSize(18);
         label.setTypeface(null, Typeface.BOLD);
         linearLayout.addView(label);
@@ -181,14 +184,28 @@ public class MainActivity extends AppCompatActivity {
             case "number":
                 EditText editText = new EditText(this);
                 editText.setHint(capitalize(fieldName.replace("_", " ")));
+
+                // Set input type
                 if ("number".equals(fieldType)) {
                     editText.setInputType(InputType.TYPE_CLASS_NUMBER);
                 }
+
+                // Set max length if provided
+                if (max_length > 0) {
+                    editText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(max_length)});
+                }
+
                 editText.setLayoutParams(new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 ));
                 editText.setBackgroundResource(R.drawable.edit_text_border);
+
+                // Scroll into view when focused
+                editText.setOnFocusChangeListener((v, hasFocus) -> {
+                    if (hasFocus) ensureVisible(v);
+                });
+
                 formInputMap.put(fieldName, editText);
                 linearLayout.addView(editText);
                 break;
@@ -198,11 +215,21 @@ public class MainActivity extends AppCompatActivity {
                 multiLine.setHint(capitalize(fieldName));
                 multiLine.setMinLines(3);
                 multiLine.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+
+                if (max_length > 0) {
+                    multiLine.setFilters(new InputFilter[]{new InputFilter.LengthFilter(max_length)});
+                }
+
                 multiLine.setLayoutParams(new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 ));
                 multiLine.setBackgroundResource(R.drawable.edit_text_border);
+
+                multiLine.setOnFocusChangeListener((v, hasFocus) -> {
+                    if (hasFocus) ensureVisible(v);
+                });
+
                 formInputMap.put(fieldName, multiLine);
                 linearLayout.addView(multiLine);
                 break;
@@ -215,6 +242,12 @@ public class MainActivity extends AppCompatActivity {
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 spinner.setAdapter(adapter);
                 spinner.setBackgroundResource(R.drawable.edit_text_border);
+
+                spinner.setOnTouchListener((v, event) -> {
+                    ensureVisible(v);
+                    return false;
+                });
+
                 formInputMap.put(fieldName, spinner);
                 linearLayout.addView(spinner);
                 break;
@@ -230,6 +263,10 @@ public class MainActivity extends AppCompatActivity {
                     intent.setType("image/*");
                     startActivityForResult(intent, SELECT_PHOTO);
                 });
+                imagePlaceholder.setOnFocusChangeListener((v, hasFocus) -> {
+                    if (hasFocus) ensureVisible(v);
+                });
+                formInputMap.put(fieldName, imagePlaceholder);
                 linearLayout.addView(imagePlaceholder);
                 break;
 
@@ -246,5 +283,9 @@ public class MainActivity extends AppCompatActivity {
     public void openMainActivity2(View view) {
         Intent intent =new Intent(this, MainActivity2.class);
         startActivity(intent);
+    }
+
+    private void ensureVisible(View view) {
+        view.getParent().requestChildFocus(view, view);
     }
 }
