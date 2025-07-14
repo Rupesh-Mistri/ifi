@@ -40,7 +40,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView latestImagePlaceholder;
     private final Map<String, View> formInputMap = new HashMap<>();
     private Uri selectedImageUri = null;
-
+    private Space space;
+    Button submitButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,15 +58,16 @@ public class MainActivity extends AppCompatActivity {
 
         fetchFormFields();
 
-        Space space = new Space(this);
+
+         space = new Space(this);
         LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 50
         );
         space.setLayoutParams(spaceParams);
-        linearLayout.addView(space);
 
-        Button submitButton = new Button(this);
+
+         submitButton = new Button(this);
         submitButton.setText("Submit");
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -119,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
             Volley.newRequestQueue(MainActivity.this).add(request);
         });
 
-        linearLayout.addView(submitButton);
     }
 
     @Override
@@ -152,7 +153,8 @@ public class MainActivity extends AppCompatActivity {
 
                             addFieldToForm(fieldName, fieldType); // your method for dynamically building the UI
                         }
-
+                        linearLayout.addView(space);
+                        linearLayout.addView(submitButton);
                     } catch (JSONException e) {
                         e.printStackTrace();
                         Toast.makeText(this, "JSON parse error", Toast.LENGTH_SHORT).show();
@@ -239,5 +241,10 @@ public class MainActivity extends AppCompatActivity {
     private String capitalize(String input) {
         if (input.length() == 0) return input;
         return input.substring(0, 1).toUpperCase() + input.substring(1);
+    }
+
+    public void openMainActivity2(View view) {
+        Intent intent =new Intent(this, MainActivity2.class);
+        startActivity(intent);
     }
 }
