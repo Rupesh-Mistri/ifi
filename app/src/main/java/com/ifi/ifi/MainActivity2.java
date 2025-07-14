@@ -53,7 +53,14 @@ public class MainActivity2 extends AppCompatActivity {
         nameInput.setLayoutParams(new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
-        Button removeBtn = createButton("Remove", "#e74c3c", v -> participantsContainer.removeView(row));
+        Button removeBtn = createButton("Remove", "#e74c3c", v -> {
+            if (participantsContainer.getChildCount() > 1) {
+                participantsContainer.removeView(row);
+            } else {
+                Toast.makeText(this, "At least one participant is required", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         Button addBtn = createButton("Add", "#3498db", v -> addParticipantRow(null));
 
         row.addView(nameInput);
@@ -61,7 +68,23 @@ public class MainActivity2 extends AppCompatActivity {
         row.addView(addBtn);
 
         participantsContainer.addView(row);
+
+        updateRemoveButtonStates();
     }
+
+    private void updateRemoveButtonStates() {
+        int childCount = participantsContainer.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            LinearLayout row = (LinearLayout) participantsContainer.getChildAt(i);
+            Button removeBtn = (Button) row.getChildAt(1); // assuming order: EditText, Remove, Add
+            if (childCount == 1) {
+                removeBtn.setEnabled(false);
+            } else {
+                removeBtn.setEnabled(true);
+            }
+        }
+    }
+
 
     // Add a photo input row
     public void addPhotoRow(View view) {
@@ -82,7 +105,15 @@ public class MainActivity2 extends AppCompatActivity {
         fileName.setText("No file chosen");
         fileName.setPadding(16, 0, 16, 0);
 
-        Button removeBtn = createButton("Remove", "#e74c3c", v -> photosContainer.removeView(row));
+        Button removeBtn = createButton("Remove", "#e74c3c", v -> {
+            if (photosContainer.getChildCount() > 1) {
+                photosContainer.removeView(row);
+                updatePhotoRemoveButtonStates();
+            } else {
+                Toast.makeText(this, "At least one photo is required", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         Button addBtn = createButton("Add", "#3498db", v -> addPhotoRow(null));
 
         row.addView(chooseBtn);
@@ -91,7 +122,19 @@ public class MainActivity2 extends AppCompatActivity {
         row.addView(addBtn);
 
         photosContainer.addView(row);
+
+        updatePhotoRemoveButtonStates();
     }
+
+    private void updatePhotoRemoveButtonStates() {
+        int childCount = photosContainer.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            LinearLayout row = (LinearLayout) photosContainer.getChildAt(i);
+            Button removeBtn = (Button) row.getChildAt(2); // assuming order: Choose, TextView, Remove, Add
+            removeBtn.setEnabled(childCount > 1);
+        }
+    }
+
 
     private Button createButton(String text, String color, View.OnClickListener onClick) {
         Button btn = new Button(this);
